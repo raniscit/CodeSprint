@@ -9,7 +9,7 @@ import Resume from "./pages/Resume";
 import CompanyPrep from "./pages/CompanyPrep";
 import Progress from "./pages/Progress";
 import Community from "./pages/Community";
-
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const { user, loginWithRedirect, isAuthenticated, logout, isLoading } = useAuth0();
@@ -27,10 +27,10 @@ function App() {
         <Route path="/companyprep" element={<CompanyPrep />} />
         <Route path="/community" element={<Community />} />
 
-        <Route path="/skillgap" element={<SkillGap />} />
-        <Route path="/roadmap" element={<Roadmap />} />
-        <Route path="/resume" element={<Resume />} />
-        <Route path="/progress" element={<Progress />} />
+        <Route path="/skillgap" element={<ProtectedRoute isAuthenticated={isAuthenticated}><SkillGap /></ProtectedRoute>} />
+        <Route path="/roadmap" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Roadmap /></ProtectedRoute>} />
+        <Route path="/resume" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Resume /></ProtectedRoute>} />
+        <Route path="/progress" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Progress /></ProtectedRoute>} />
 
 
       </Routes>
