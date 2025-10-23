@@ -1,321 +1,3 @@
-// import React, { useState, useEffect, useRef } from "react";
-// import jsPDF from "jspdf";
-// import html2canvas from "html2canvas";
-
-// export default function Resume() {
-//     const [resumes, setResumes] = useState([]); // all resumes
-//     const [selectedResume, setSelectedResume] = useState(null);
-//     const [form, setForm] = useState({
-//         name: "",
-//         email: "",
-//         PhoneNumber: "",
-//         LinkedinLink: "",
-//         GithubLink: "",
-//         education: "",
-//         experience: "",
-//         projects: "",
-//         skills: "",
-//     });
-
-//     const resumeRef = useRef();
-
-//     // Load resumes from localStorage on mount
-//     useEffect(() => {
-//         const stored = localStorage.getItem("resumes");
-//         if (stored) {
-//             setResumes(JSON.parse(stored));
-//         }
-//     }, []); // ✅ Load only once on mount
-
-
-//     // Save resumes to localStorage whenever they change
-//     useEffect(() => {
-//         if (resumes.length > 0) {
-//             localStorage.setItem("resumes", JSON.stringify(resumes));
-//         }
-//     }, [resumes]);
-//     // ✅ Save only when resumes is updated later
-
-
-//     // handle form change
-//     const handleChange = (e) => {
-//         setForm({ ...form, [e.target.name]: e.target.value });
-//     };
-
-//     // handle form submit
-//     const handleSubmit = (e) => {
-//         e.preventDefault();
-
-//         const newResume = {
-//             id: Date.now(),
-//             ...form,
-//             createdAt: new Date().toLocaleString(),
-//         };
-
-//         setResumes([newResume, ...resumes]); // add new resume at top
-//         setForm({
-//             name: "",
-//             email: "",
-//             PhoneNumber: "",
-//             LinkedinLink: "",
-//             GithubLink: "",
-//             education: "",
-//             experience: "",
-//             projects: "",
-//             skills: "",
-//         });
-//     };
-
-//     const handlePreview = (resume) => {
-//         setSelectedResume(resume);
-//     };
-
-//     // download resume as PDF
-//     const handleDownload = async (resume) => {
-//         setSelectedResume(resume);
-//         await new Promise((r) => setTimeout(r, 100)); // wait for DOM to update
-
-//         if (!resumeRef.current) return;
-//         const canvas = await html2canvas(resumeRef.current, { scale: 2 });
-//         const imgData = canvas.toDataURL("image/png");
-
-//         const pdf = new jsPDF("p", "px", [canvas.width, canvas.height]); // canvas size
-//         pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-//         pdf.save(`${resume.name}_resume.pdf`);
-//     };
-
-
-
-
-//     return (
-//         <div className="p-6 flex flex-col md:flex-row gap-6 bg-gray-100 min-h-screen">
-//             {/* LEFT SIDE — Resume list */}
-//             <div className="md:w-1/3 bg-white shadow-lg rounded-2xl p-4">
-//                 <h2 className="text-2xl font-bold mb-4 text-gray-800">Your Resumes</h2>
-
-//                 {resumes.length === 0 ? (
-//                     <p className="text-gray-500">No resumes created yet.</p>
-//                 ) : (
-//                     <ul className="space-y-3">
-//                         {resumes.map((r) => (
-//                             <li
-//                                 key={r.id}
-//                                 className={`p-3 rounded-xl border cursor-pointer ${selectedResume?.id === r.id ? "bg-blue-100" : "hover:bg-gray-50"
-//                                     }`}
-//                                 onClick={() => handlePreview(r)}
-//                             >
-//                                 <div className="flex justify-between items-center">
-//                                     <div>
-//                                         <h3 className="font-semibold">{r.name}</h3>
-//                                         <p className="text-sm text-gray-500">{r.createdAt}</p>
-//                                     </div>
-//                                     <button
-//                                         type="button"
-//                                         onClick={(e) => {
-//                                             e.stopPropagation();
-//                                             handleDownload(r);
-
-//                                         }}
-//                                         className="text-sm bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-950"
-//                                     >
-//                                         Download
-//                                     </button>
-//                                 </div>
-//                             </li>
-//                         ))}
-//                     </ul>
-//                 )}
-
-//                 {/* FORM SECTION */}
-//                 <h3 className="text-xl font-bold mt-6 mb-2 text-gray-700">Create New Resume</h3>
-//                 <form onSubmit={handleSubmit} className="space-y-2">
-//                     <input
-//                         name="name"
-//                         value={form.name}
-//                         onChange={handleChange}
-//                         placeholder="Name"
-//                         className="w-full p-2 border rounded"
-//                         required
-//                     />
-//                     <input
-//                         name="email"
-//                         value={form.email}
-//                         onChange={handleChange}
-//                         placeholder="Email"
-//                         className="w-full p-2 border rounded"
-//                         required
-//                     />
-//                     <input
-//                         name="PhoneNumber"
-//                         value={form.PhoneNumber}
-//                         onChange={handleChange}
-//                         placeholder="PhoneNumber"
-//                         className="w-full p-2 border rounded"
-//                         required
-//                     />
-//                     <input
-//                         name="LinkedinLink"
-//                         value={form.LinkedinLink}
-//                         onChange={handleChange}
-//                         placeholder="LinkedinLink"
-//                         className="w-full p-2 border rounded"
-//                         required
-//                     />
-//                     <input
-//                         name="GithubLink"
-//                         value={form.GithubLink}
-//                         onChange={handleChange}
-//                         placeholder="GithubLink"
-//                         className="w-full p-2 border rounded"
-//                         required
-//                     />
-//                     <input
-//                         name="education"
-//                         value={form.education}
-//                         onChange={handleChange}
-//                         placeholder="Education"
-//                         className="w-full p-2 border rounded"
-//                         required
-//                     />
-//                     <textarea
-//                         name="experience"
-//                         value={form.experience}
-//                         onChange={handleChange}
-//                         placeholder="Experience"
-//                         className="w-full p-2 border rounded"
-//                         required
-//                     />
-//                     <textarea
-//                         name="projects"
-//                         value={form.projects}
-//                         onChange={handleChange}
-//                         placeholder="projects"
-//                         className="w-full p-2 border rounded"
-//                         required
-//                     />
-//                     <input
-//                         name="skills"
-//                         value={form.skills}
-//                         onChange={handleChange}
-//                         placeholder="Skills"
-//                         className="w-full p-2 border rounded"
-//                         required
-//                     />
-//                     <button
-//                         type="submit"
-//                         className="w-full bg-green-500 text-white py-2 rounded-lg font-semibold"
-//                     >
-//                         Save Resume
-//                     </button>
-//                 </form>
-//             </div>
-
-//             {/* RIGHT SIDE — Resume Preview */}
-//             <div className="md:w-2/3 bg-white shadow-lg rounded-2xl p-6">
-//                 <h2 className="text-2xl font-bold mb-4 text-gray-800">Preview</h2>
-
-//                 {selectedResume ? (
-//                     <div
-//                         id="resume-preview"
-//                         ref={resumeRef}
-//                         style={{
-//                             width: "210mm", // A4 width
-//                             minHeight: "297mm", // A4 height
-//                             margin: "0 auto",
-//                             backgroundColor: "white",
-//                             padding: "20mm",
-//                             boxShadow: "0 0 5mm rgba(0,0,0,0.1)",
-//                             fontFamily: "'Times New Roman', serif",
-//                             color: "#222",
-//                             lineHeight: 1.5,
-//                         }}
-//                     >
-//                         {/* HEADER */}
-//                         <header style={{ textAlign: "center", borderBottom: "2px solid #000", paddingBottom: "5mm", marginBottom: "6mm" }}>
-//                             <h1 style={{ fontSize: "28px", fontWeight: "bold", marginBottom: "2mm" }}>{selectedResume.name}</h1>
-//                             <p style={{ fontSize: "14px" }}>
-//                                 {selectedResume.email} | {selectedResume.PhoneNumber}
-//                             </p>
-//                             <p style={{ fontSize: "13px" }}>
-//                                 <a href={selectedResume.LinkedinLink} target="_blank" rel="noreferrer">LinkedIn</a> |{" "}
-//                                 <a href={selectedResume.GithubLink} target="_blank" rel="noreferrer">GitHub</a>
-//                             </p>
-//                         </header>
-
-
-//                         <section style={{ marginBottom: "8mm" }}>
-//                             <div style={{ borderBottom: "1px solid #000", marginBottom: "4mm" }}>
-//                                 <h2 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "2mm" }}>
-//                                     Education
-//                                 </h2>
-//                             </div>
-//                             <ul style={{ marginLeft: "5mm", listStyleType: "disc" }}>
-//                                 {selectedResume.education.split("\n").map((edu, i) => (
-//                                     <li key={i}>{edu.trim()}</li>
-//                                 ))}
-//                             </ul>
-//                         </section>
-
-
-//                         {/* EXPERIENCE */}
-//                         <section style={{ marginBottom: "8mm" }}>
-//                             <div style={{ borderBottom: "1px solid #000", marginBottom: "4mm" }}>
-//                                 <h2
-//                                     style={{
-//                                         fontSize: "18px",
-//                                         fontWeight: "bold",
-//                                         marginBottom: "2mm",
-//                                     }}
-//                                 >
-//                                     Experience
-//                                 </h2>
-//                             </div>
-//                             <ul style={{ marginLeft: "5mm", listStyleType: "disc" }}>
-//                                 {selectedResume.experience
-//                                     .split("\n")
-//                                     .filter((exp) => exp.trim() !== "")
-//                                     .map((exp, index) => (
-//                                         <li key={index}>{exp.trim()}</li>
-//                                     ))}
-//                             </ul>
-//                         </section>
-
-//                         {/* SKILLS */}
-//                         <section style={{ marginBottom: "8mm" }}>
-//                             <div style={{ borderBottom: "1px solid #000", marginBottom: "4mm" }}>
-//                                 <h2
-//                                     style={{
-//                                         fontSize: "18px",
-//                                         fontWeight: "bold",
-//                                         marginBottom: "2mm",
-//                                     }}
-//                                 >
-//                                     Skills
-//                                 </h2>
-//                             </div>
-//                             <ul style={{ marginLeft: "5mm", listStyleType: "circle", columns: 2 }}>
-//                                 {selectedResume.skills
-//                                     .split(/[,;\n]/)
-//                                     .filter((skill) => skill.trim() !== "")
-//                                     .map((skill, index) => (
-//                                         <li key={index}>{skill.trim()}</li>
-//                                     ))}
-//                             </ul>
-//                         </section>
-//                     </div>
-//                 ) : (
-//                     <p className="text-gray-500">Select a resume to preview.</p>
-//                 )}
-
-
-
-//             </div>
-//         </div>
-//     );
-// }
-
-
-
 import React, { useState, useEffect, useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -417,15 +99,33 @@ export default function Resume() {
 
     const handleDownload = async (resume) => {
         setSelectedResume(resume);
-        await new Promise((r) => setTimeout(r, 300)); // wait DOM update
-        const canvas = await html2canvas(resumeRef.current, { scale: 2 });
-        const pdf = new jsPDF("p", "mm", "a4");
+        await new Promise((r) => setTimeout(r, 300)); // wait for DOM update
+
+        const input = resumeRef.current;
+        const canvas = await html2canvas(input, { scale: 2 });
         const imgData = canvas.toDataURL("image/png");
+
+        const pdf = new jsPDF("p", "mm", "a4");
         const pdfWidth = 210;
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        const pdfHeight = 297;
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgWidth = pdfWidth;
+        const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        while (heightLeft > 0) {
+            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+            position -= pdfHeight; // move up for next slice
+            if (heightLeft > 0) pdf.addPage();
+        }
+
         pdf.save(`${resume.name}_resume.pdf`);
     };
+
+
 
     return (
         <div className="p-6 flex flex-col md:flex-row gap-6 bg-gray-100 min-h-screen">
