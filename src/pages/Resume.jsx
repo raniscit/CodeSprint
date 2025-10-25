@@ -44,6 +44,16 @@ export default function Resume() {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
+
+    const handleDelete = (id) => {
+        if (window.confirm("Are you sure you want to delete this resume?")) {
+            const updated = resumes.filter((r) => r.id !== id);
+            setResumes(updated);
+            localStorage.setItem("resumes", JSON.stringify(updated));
+            if (selectedResume?.id === id) setSelectedResume(null);
+        }
+    };
+
     // Handle nested field changes (education, experience, projects)
     const handleNestedChange = (section, index, field, value) => {
         const updated = [...form[section]];
@@ -149,15 +159,29 @@ export default function Resume() {
                                         <h3 className="font-semibold">{r.name}</h3>
                                         <p className="text-sm text-gray-500">{r.createdAt}</p>
                                     </div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDownload(r);
-                                        }}
-                                        className="text-sm bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-900"
-                                    >
-                                        Download
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDownload(r);
+                                            }}
+                                            className="text-sm bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-900"
+                                        >
+                                            Download
+                                        </button>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(r.id);
+                                            }}
+                                            className="text-sm bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-800"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+
+
                                 </div>
                             </li>
                         ))}
