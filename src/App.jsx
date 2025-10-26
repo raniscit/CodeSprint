@@ -10,6 +10,8 @@ import CompanyPrep from "./pages/CompanyPrep";
 import Progress from "./pages/Progress";
 import Community from "./pages/Community";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Profile from "./pages/Profile";
+
 
 function App() {
   const { user, loginWithRedirect, isAuthenticated, logout, isLoading } = useAuth0();
@@ -31,6 +33,8 @@ function App() {
         <Route path="/roadmap" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Roadmap /></ProtectedRoute>} />
         <Route path="/resume" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Resume /></ProtectedRoute>} />
         <Route path="/progress" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Progress /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Profile /></ProtectedRoute>} />
+
 
 
       </Routes>

@@ -6,7 +6,7 @@ import HeroSection from "../components/HeroSection";
 export default function Dashboard() {
   return (
     <>
-    <div className="text-center">
+    <div className="text-center mt-16">
       <img src={MaangImage} alt="Maang Logo" className="w-5xl h-auto rounded-lg m-auto" />
       <h1  className="text-4xl font-bold my-3">Cracking Top Software Jobs made Simple!</h1>
       <p>Your placement, learning and interview accelerator.</p>
