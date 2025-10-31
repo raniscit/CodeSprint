@@ -22,7 +22,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-white p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -70,7 +70,7 @@ export default function Profile() {
         <div className="mt-8 flex flex-col gap-3">
           <button
             onClick={() => logout({ returnTo: window.location.origin })}
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-lg transition"
+            className="w-full bg-red-400 hover:bg-red-600 text-white font-semibold py-2 rounded-lg transition"
           >
             Logout
           </button>

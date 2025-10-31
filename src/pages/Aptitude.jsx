@@ -1,5 +1,5 @@
 export default function Progress(){
     return(
-        <div>~This is Progress page</div>
+        <div>~This is Aptitude page</div>
     )
 }

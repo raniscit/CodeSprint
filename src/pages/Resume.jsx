@@ -1,20 +1,31 @@
 import React, { useState, useEffect, useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { useParams } from "react-router-dom";
+import ResumePreview from "../components/ResumePreview";
 
 export default function Resume() {
+    const { templateId } = useParams();
     const [resumes, setResumes] = useState([]);
     const [selectedResume, setSelectedResume] = useState(null);
+    const [openMenuId, setOpenMenuId] = useState(null);
 
-    // Structured form state
+
     const [form, setForm] = useState({
         name: "",
+        role: "",
         email: "",
         phone: "",
+        website: "",
         linkedin: "",
         github: "",
+        location: "",
+        photo: "",
+        summary: "",
+        yearStart: "",
+        yearEnd: "",
         education: [{ school: "", degree: "", location: "", duration: "" }],
-        experience: [{ role: "", company: "", location: "", duration: "", points: [""] }],
+        experience: [{ role: "", company: "", duration: "", points: [""] }],
         projects: [{ title: "", tech: "", duration: "", points: [""] }],
         skills: {
             Languages: "",
@@ -24,29 +35,25 @@ export default function Resume() {
         },
     });
 
-    const resumeRef = useRef();
+    const resumeRef = useRef(null);
 
-    // Load resumes from localStorage on mount
     useEffect(() => {
         const stored = localStorage.getItem("resumes");
         if (stored) setResumes(JSON.parse(stored));
     }, []);
 
-    // Save to localStorage when resumes change
     useEffect(() => {
         if (resumes.length > 0) {
             localStorage.setItem("resumes", JSON.stringify(resumes));
         }
     }, [resumes]);
 
-    // Generic input handler
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-
     const handleDelete = (id) => {
-        if (window.confirm("Are you sure you want to delete this resume?")) {
+        if (window.confirm("Delete this resume?")) {
             const updated = resumes.filter((r) => r.id !== id);
             setResumes(updated);
             localStorage.setItem("resumes", JSON.stringify(updated));
@@ -54,52 +61,79 @@ export default function Resume() {
         }
     };
 
-    // Handle nested field changes (education, experience, projects)
     const handleNestedChange = (section, index, field, value) => {
         const updated = [...form[section]];
         updated[index][field] = value;
         setForm({ ...form, [section]: updated });
     };
 
-    // Handle points (array of bullet points)
     const handlePointChange = (section, index, pointIndex, value) => {
         const updated = [...form[section]];
         updated[index].points[pointIndex] = value;
         setForm({ ...form, [section]: updated });
     };
 
-    // Add new education/experience/project
     const addItem = (section) => {
         const emptyItem =
             section === "education"
                 ? { school: "", degree: "", location: "", duration: "" }
                 : section === "experience"
-                    ? { role: "", company: "", location: "", duration: "", points: [""] }
+                    ? { role: "", company: "", duration: "", points: [""] }
                     : { title: "", tech: "", duration: "", points: [""] };
-
         setForm({ ...form, [section]: [...form[section], emptyItem] });
     };
 
-    // Add new bullet point
     const addPoint = (section, index) => {
         const updated = [...form[section]];
         updated[index].points.push("");
         setForm({ ...form, [section]: updated });
     };
 
-    // Save resume
+    const handlePhotoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => setForm({ ...form, photo: reader.result });
+            reader.readAsDataURL(file);
+        }
+    };
+
+    useEffect(() => {
+        const handleClickOutside = () => {
+            if (openMenuId !== null) setOpenMenuId(null);
+        };
+
+        window.addEventListener("click", handleClickOutside);
+
+        return () => {
+            window.removeEventListener("click", handleClickOutside);
+        };
+    }, [openMenuId]);
+
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        const newResume = { id: Date.now(), ...form, createdAt: new Date().toLocaleString() };
+        const newResume = {
+            id: Date.now(),
+            ...form,
+            createdAt: new Date().toLocaleString(),
+        };
         setResumes([newResume, ...resumes]);
         setForm({
             name: "",
+            role: "",
             email: "",
             phone: "",
+            website: "",
             linkedin: "",
             github: "",
+            location: "",
+            photo: "",
+            summary: "",
+            yearStart: "",
+            yearEnd: "",
             education: [{ school: "", degree: "", location: "", duration: "" }],
-            experience: [{ role: "", company: "", location: "", duration: "", points: [""] }],
+            experience: [{ role: "", company: "", duration: "", points: [""] }],
             projects: [{ title: "", tech: "", duration: "", points: [""] }],
             skills: { Languages: "", Frameworks: "", Tools: "", Libraries: "" },
         });
@@ -109,7 +143,7 @@ export default function Resume() {
 
     const handleDownload = async (resume) => {
         setSelectedResume(resume);
-        await new Promise((r) => setTimeout(r, 300)); // wait for DOM update
+        await new Promise((r) => setTimeout(r, 300));
 
         const input = resumeRef.current;
         const canvas = await html2canvas(input, { scale: 2 });
@@ -128,7 +162,7 @@ export default function Resume() {
         while (heightLeft > 0) {
             pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
             heightLeft -= pdfHeight;
-            position -= pdfHeight; // move up for next slice
+            position -= pdfHeight;
             if (heightLeft > 0) pdf.addPage();
         }
 
@@ -136,9 +170,40 @@ export default function Resume() {
     };
 
 
+    const handleEdit = (id) => {
+        const resumeToEdit = resumes.find((r) => r.id === id);
+        if (!resumeToEdit) return;
+
+        // Populate form fields with existing resume data
+        setForm({
+            name: resumeToEdit.name || "",
+            role: resumeToEdit.role || "",
+            email: resumeToEdit.email || "",
+            phone: resumeToEdit.phone || "",
+            website: resumeToEdit.website || "",
+            linkedin: resumeToEdit.linkedin || "",
+            github: resumeToEdit.github || "",
+            location: resumeToEdit.location || "",
+            photo: resumeToEdit.photo || "",
+            summary: resumeToEdit.summary || "",
+            yearStart: resumeToEdit.yearStart || "",
+            yearEnd: resumeToEdit.yearEnd || "",
+            education: resumeToEdit.education || [{ school: "", degree: "", location: "", duration: "" }],
+            experience: resumeToEdit.experience || [{ role: "", company: "", duration: "", points: [""] }],
+            projects: resumeToEdit.projects || [{ title: "", tech: "", duration: "", points: [""] }],
+            skills: resumeToEdit.skills || { Languages: "", Frameworks: "", Tools: "", Libraries: "" },
+        });
+
+        // Set this resume as currently selected for editing
+        setSelectedResume(resumeToEdit);
+
+        // Optional: scroll or highlight the form section for visibility
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
 
     return (
-        <div className="p-6 flex flex-col md:flex-row gap-6 bg-gray-100 min-h-screen">
+        <div className="p-6 flex flex-col md:flex-row gap-6 bg-gray-100 min-h-screen w-7xl">
             {/* LEFT SIDE */}
             <div className="md:w-1/3 bg-white shadow-lg rounded-2xl p-4 overflow-y-auto max-h-screen">
                 <h2 className="text-2xl font-bold mb-4 text-gray-800">Your Resumes</h2>
@@ -150,7 +215,9 @@ export default function Resume() {
                         {resumes.map((r) => (
                             <li
                                 key={r.id}
-                                className={`p-3 rounded-xl border cursor-pointer ${selectedResume?.id === r.id ? "bg-blue-100" : "hover:bg-gray-50"
+                                className={`p-3 rounded-xl border cursor-pointer ${selectedResume?.id === r.id
+                                    ? "bg-blue-100"
+                                    : "hover:bg-gray-50"
                                     }`}
                                 onClick={() => handlePreview(r)}
                             >
@@ -159,28 +226,43 @@ export default function Resume() {
                                         <h3 className="font-semibold">{r.name}</h3>
                                         <p className="text-sm text-gray-500">{r.createdAt}</p>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="relative">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDownload(r);
+                                                setOpenMenuId(openMenuId === r.id ? null : r.id);
                                             }}
-                                            className="text-sm bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-900"
+                                            className="text-gray-700 text-xl font-bold px-2"
                                         >
-                                            Download
+                                            ⋮
                                         </button>
 
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDelete(r.id);
-                                            }}
-                                            className="text-sm bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-800"
-                                        >
-                                            Delete
-                                        </button>
+                                        {openMenuId === r.id && (
+                                            <div
+                                                className="absolute right-0 mt-2 bg-white border rounded-md shadow-lg z-10 flex flex-col"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <button
+                                                    onClick={() => handleDownload(r)}
+                                                    className="text-sm text-blue-600 hover:bg-blue-50 px-4 py-2 text-left"
+                                                >
+                                                    Download
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(r.id)}
+                                                    className="text-sm text-red-600 hover:bg-red-50 px-4 py-2 text-left"
+                                                >
+                                                    Delete
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEdit(r.id)}
+                                                    className="text-sm text-green-600 hover:bg-green-50 px-4 py-2 text-left"
+                                                >
+                                                    Edit
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-
 
                                 </div>
                             </li>
@@ -188,14 +270,118 @@ export default function Resume() {
                     </ul>
                 )}
 
+
+
                 {/* FORM */}
-                <h3 className="text-xl font-bold mt-6 mb-2 text-gray-700">Create New Resume</h3>
+                <style>
+                    {`
+                        input, textarea {
+                            color: #000; /* typed text color */
+                        }
+
+                        input::placeholder,
+                        textarea::placeholder {
+                            color: #888; /* placeholder color */
+                            opacity: 1; /* make sure grey color shows properly */
+                        }
+                    `}
+                </style>
+
+
+                <h3 className="text-xl font-bold mt-6 mb-2 text-gray-700">
+                    Create New Resume
+                </h3>
                 <form onSubmit={handleSubmit} className="space-y-3 text-sm">
-                    <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="w-full p-2 border rounded" required />
-                    <input name="email" value={form.email} onChange={handleChange} placeholder="Email" className="w-full p-2 border rounded" required />
-                    <input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" className="w-full p-2 border rounded" required />
-                    <input name="linkedin" value={form.linkedin} onChange={handleChange} placeholder="LinkedIn URL" className="w-full p-2 border rounded" />
-                    <input name="github" value={form.github} onChange={handleChange} placeholder="GitHub URL" className="w-full p-2 border rounded" />
+                    <input
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        placeholder="Full Name"
+                        className="w-full p-2 border rounded"
+                        required
+                    />
+                    <input
+                        name="role"
+                        value={form.role}
+                        onChange={handleChange}
+                        placeholder="Role / Position"
+                        className="w-full p-2 border rounded"
+                    />
+                    <textarea
+                        name="summary"
+                        value={form.summary}
+                        onChange={handleChange}
+                        placeholder="Professional Summary"
+                        className="w-full p-2 border rounded"
+                    />
+
+                    <input
+                        name="photo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="w-full border p-1 rounded"
+                    />
+
+                    <input
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        placeholder="Email"
+                        className="w-full p-2 border rounded"
+                        required
+                    />
+                    <input
+                        name="phone"
+                        value={form.phone}
+                        onChange={handleChange}
+                        placeholder="Phone"
+                        className="w-full p-2 border rounded"
+                    />
+                    <input
+                        name="website"
+                        value={form.website}
+                        onChange={handleChange}
+                        placeholder="Website"
+                        className="w-full p-2 border rounded"
+                    />
+                    <input
+                        name="linkedin"
+                        value={form.linkedin}
+                        onChange={handleChange}
+                        placeholder="LinkedIn URL"
+                        className="w-full p-2 border rounded"
+                    />
+                    <input
+                        name="github"
+                        value={form.github}
+                        onChange={handleChange}
+                        placeholder="GitHub URL"
+                        className="w-full p-2 border rounded"
+                    />
+                    <input
+                        name="location"
+                        value={form.location}
+                        onChange={handleChange}
+                        placeholder="Location"
+                        className="w-full p-2 border rounded"
+                    />
+                    <div className="flex gap-2">
+                        <input
+                            name="yearStart"
+                            value={form.yearStart}
+                            onChange={handleChange}
+                            placeholder="Start Year"
+                            className="w-1/2 p-2 border rounded"
+                        />
+                        <input
+                            name="yearEnd"
+                            value={form.yearEnd}
+                            onChange={handleChange}
+                            placeholder="End Year"
+                            className="w-1/2 p-2 border rounded"
+                        />
+                    </div>
 
                     {/* Education */}
                     <h4 className="font-semibold mt-4">Education</h4>
@@ -237,7 +423,6 @@ export default function Resume() {
                         <div key={i} className="border p-2 rounded space-y-1">
                             <input placeholder="Title" value={proj.title} onChange={(e) => handleNestedChange("projects", i, "title", e.target.value)} className="w-full border p-1 rounded" />
                             <input placeholder="Tech Used" value={proj.tech} onChange={(e) => handleNestedChange("projects", i, "tech", e.target.value)} className="w-full border p-1 rounded" />
-                            <input placeholder="Duration" value={proj.duration} onChange={(e) => handleNestedChange("projects", i, "duration", e.target.value)} className="w-full border p-1 rounded" />
                             {proj.points.map((p, j) => (
                                 <input key={j} placeholder="Bullet point" value={p} onChange={(e) => handlePointChange("projects", i, j, e.target.value)} className="w-full border p-1 rounded" />
                             ))}
@@ -256,150 +441,21 @@ export default function Resume() {
                         <input key={key} placeholder={key} value={form.skills[key]} onChange={(e) => setForm({ ...form, skills: { ...form.skills, [key]: e.target.value } })} className="w-full border p-1 rounded" />
                     ))}
 
-                    <button type="submit" className="w-full bg-green-500 text-white py-2 rounded-lg font-semibold">
+                    <button
+                        type="submit"
+                        className="w-full bg-green-500 text-white py-2 rounded-lg font-semibold"
+                    >
                         Save Resume
                     </button>
                 </form>
             </div>
 
-            {/* RIGHT SIDE PREVIEW */}
-            <div className="md:w-2/3 bg-white shadow-lg rounded-2xl p-6 overflow-y-auto">
-                <h2 className="text-2xl font-bold mb-4 text-gray-800">Preview</h2>
-                {selectedResume ? (
-                    <div
-                        ref={resumeRef}
-                        style={{
-                            width: "210mm",
-                            minHeight: "297mm",
-                            background: "#fff",
-                            padding: "15mm",
-                            fontFamily: "Georgia, serif",
-                            color: "#000",
-                        }}
-                    >
-                        <header style={{ textAlign: "center", marginBottom: "8mm" }}>
-                            <h1 style={{ fontSize: "22px", fontWeight: "bold" }}>{selectedResume.name}</h1>
-                            <p>{selectedResume.email} | {selectedResume.phone}</p>
-                            <p>
-                                <a href={selectedResume.linkedin}>LinkedIn</a> |{" "}
-                                <a href={selectedResume.github}>GitHub</a>
-                            </p>
-                        </header>
-
-                        {/* Education */}
-                        <section style={{ marginBottom: "8mm" }}>
-                            <h2
-                                style={{
-                                    fontWeight: "bold",
-                                    fontSize: "14px",
-                                    marginBottom: "2mm",
-                                    letterSpacing: "0.5px",
-                                }}
-                            >
-                                Education
-                            </h2>
-                            <div style={{ height: "1px", backgroundColor: "#000", marginBottom: "3mm" }}></div>
-                            {(Array.isArray(selectedResume.education) ? selectedResume.education : []).map((edu, i) => (
-                                <div key={i} style={{ marginTop: "3mm" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                        <strong>{edu.school}</strong>
-                                        <span>{edu.location}</span>
-                                    </div>
-                                    <i>{edu.degree}</i>
-                                    <div>{edu.duration}</div>
-                                </div>
-                            ))}
-                        </section>
-
-                        {/* Experience */}
-                        <section style={{ marginBottom: "8mm" }}>
-                            <h2
-                                style={{
-                                    fontWeight: "bold",
-                                    fontSize: "14px",
-                                    marginBottom: "2mm",
-                                    letterSpacing: "0.5px",
-                                }}
-                            >
-                                Experience
-                            </h2>
-                            <div style={{ height: "1px", backgroundColor: "#000", marginBottom: "3mm" }}></div>
-                            {(Array.isArray(selectedResume.experience) ? selectedResume.experience : []).map((exp, i) => (
-                                <div key={i} style={{ marginTop: "3mm" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                        <strong>{exp.role}</strong>
-                                        <span>{exp.duration}</span>
-                                    </div>
-                                    <i>{exp.company}</i>, {exp.location}
-                                    <ul style={{ marginLeft: "5mm", marginTop: "2mm" }}>
-                                        {(Array.isArray(exp.points) ? exp.points : [])
-                                            .filter(Boolean)
-                                            .map((p, j) => (
-                                                <li key={j}>{p}</li>
-                                            ))}
-                                    </ul>
-                                </div>
-                            ))}
-                        </section>
-
-                        {/* Projects */}
-                        <section style={{ marginBottom: "8mm" }}>
-                            <h2
-                                style={{
-                                    fontWeight: "bold",
-                                    fontSize: "14px",
-                                    marginBottom: "2mm",
-                                    letterSpacing: "0.5px",
-                                }}
-                            >
-                                Projects
-                            </h2>
-                            <div style={{ height: "1px", backgroundColor: "#000", marginBottom: "3mm" }}></div>
-                            {(Array.isArray(selectedResume.projects) ? selectedResume.projects : []).map((proj, i) => (
-                                <div key={i} style={{ marginTop: "3mm" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                        <strong>{proj.title}</strong>
-                                        <span>{proj.duration}</span>
-                                    </div>
-                                    <i>{proj.tech}</i>
-                                    <ul style={{ marginLeft: "5mm", marginTop: "2mm" }}>
-                                        {(Array.isArray(proj.points) ? proj.points : [])
-                                            .filter(Boolean)
-                                            .map((p, j) => (
-                                                <li key={j}>{p}</li>
-                                            ))}
-                                    </ul>
-                                </div>
-                            ))}
-                        </section>
-
-                        {/* Skills */}
-                        <section>
-                            <h2
-                                style={{
-                                    fontWeight: "bold",
-                                    fontSize: "14px",
-                                    marginBottom: "2mm",
-                                    letterSpacing: "0.5px",
-                                }}
-                            >
-                                Technical Skills
-                            </h2>
-                            <div style={{ height: "1px", backgroundColor: "#000", marginBottom: "3mm" }}></div>
-                            {Object.entries(selectedResume.skills || {}).map(
-                                ([category, value], i) =>
-                                    value && (
-                                        <p key={i} style={{ marginBottom: "2mm" }}>
-                                            <strong>{category}:</strong> {value}
-                                        </p>
-                                    )
-                            )}
-                        </section>
-
-                    </div>
-                ) : (
-                    <p className="text-gray-500">Select a resume to preview.</p>
-                )}
+            <div style={{ colorScheme: "light", width: "1000px" }}>
+                <ResumePreview
+                    resume={selectedResume}
+                    template={templateId}
+                    ref={resumeRef}
+                />
             </div>
         </div>
     );
